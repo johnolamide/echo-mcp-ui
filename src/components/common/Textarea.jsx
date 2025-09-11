@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../lib/utils';
 
 /**
  * Textarea component for multiline text input

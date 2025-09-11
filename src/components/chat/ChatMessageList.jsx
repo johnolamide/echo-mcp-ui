@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import ChatMessage from './ChatMessage';
+import ChatMessage from '../ChatMessage.jsx';
 
 /**
  * Component to display a list of chat messages with auto-scroll
@@ -28,10 +28,8 @@ const ChatMessageList = ({ messages, isLoading }) => {
         {messages.map((message, index) => (
           <ChatMessage
             key={message.id || index}
-            content={message.content}
-            isUser={message.role === 'user'}
-            timestamp={formatTimestamp(message.timestamp)}
-            index={index}
+            message={message}
+            isLoading={isLoading && index === messages.length - 1 && message.role !== 'user'}
           />
         ))}
       </AnimatePresence>

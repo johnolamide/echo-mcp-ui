@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '../../utils/cn';
+import { cn } from '../../lib/utils';
+import MarkdownRenderer from '../common/MarkdownRenderer';
 
 /**
  * Component to render an individual chat message
@@ -32,8 +33,26 @@ const ChatMessage = memo(({ content, isUser, timestamp, index = 0 }) => {
             : "bg-gray-100 text-gray-800"
         )}
       >
-        <div className="prose prose-sm">
-          {content}
+        <div className={cn(
+          "prose prose-sm max-w-none",
+          isUser ? "prose-invert" : ""
+        )}>
+          {isUser ? (
+            // For user messages, keep simple text formatting
+            typeof content === 'string' 
+              ? content.split('\n').map((line, i) => (
+                  <p key={i} className={line.trim() === '' ? 'h-4' : ''}>
+                    {line.trim() === '' ? '\u00A0' : line}
+                  </p>
+                ))
+              : JSON.stringify(content)
+          ) : (
+            // For AI messages, render as beautiful markdown
+            <MarkdownRenderer 
+              content={typeof content === 'string' ? content : JSON.stringify(content)}
+              className={isUser ? "prose-invert" : ""}
+            />
+          )}
         </div>
         <div 
           className={cn(

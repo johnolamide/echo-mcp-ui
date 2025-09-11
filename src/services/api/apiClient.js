@@ -1,17 +1,19 @@
 import axios from 'axios';
 
-// Define the API base URL
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://api.echo-mcp.com' // Replace with your production API URL
-  : 'http://localhost:3000'; // Replace with your local development API URL
+// Define the API base URL - point to the echo-mcp-client API
+const API_BASE_URL = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:8002';
+
+console.log(`Configuring API client to use base URL: ${API_BASE_URL}`);
 
 // Create an axios instance with default configs
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
   },
-  timeout: 30000, // 30 seconds
+  timeout: 60000, // Increased timeout to 60 seconds for potentially longer API operations
+  withCredentials: false, // For CORS support
 });
 
 // Add request interceptor for authentication
