@@ -10,7 +10,6 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
   },
   timeout: 60000, // Increased timeout to 60 seconds for potentially longer API operations
   withCredentials: false, // For CORS support
