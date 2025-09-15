@@ -15,14 +15,15 @@ const apiClient = axios.create({
   withCredentials: false, // For CORS support
 });
 
-// Add request interceptor for authentication
+// Add request interceptor - simplified for demo (no authentication)
 apiClient.interceptors.request.use(
   (config) => {
+    // Authentication removed for hackathon demo
     // Add authorization header if user is logged in
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // const token = localStorage.getItem('auth_token');
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`;
+    // }
     return config;
   },
   (error) => {
@@ -37,11 +38,12 @@ apiClient.interceptors.response.use(
     // Handle specific error statuses
     if (error.response) {
       switch (error.response.status) {
-        case 401:
-          // Unauthorized - clear auth and redirect to login
-          localStorage.removeItem('auth_token');
-          // You can add redirection logic here
-          break;
+        // Authentication removed for hackathon demo
+        // case 401:
+        //   // Unauthorized - clear auth and redirect to login
+        //   localStorage.removeItem('auth_token');
+        //   // You can add redirection logic here
+        //   break;
         case 429:
           // Rate limiting
           console.warn('Rate limit exceeded. Please try again later.');

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
+import { User, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -17,9 +17,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,7 +34,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.username.trim() || !formData.password) {
+    if (!formData.username.trim()) {
       return;
     }
 
@@ -52,12 +50,10 @@ const LoginForm = ({ onSwitchToRegister }) => {
     if (type === 'admin') {
       setFormData({
         username: 'admin001',
-        password: 'AdminPass123!'
       });
     } else {
       setFormData({
         username: 'demo_user',
-        password: 'password123'
       });
     }
     if (error) clearError();
@@ -112,40 +108,10 @@ const LoginForm = ({ onSwitchToRegister }) => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || !formData.username.trim() || !formData.password}
+              disabled={loading || !formData.username.trim()}
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

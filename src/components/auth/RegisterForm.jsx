@@ -11,12 +11,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = (e) => {
@@ -49,26 +44,6 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       errors.username = 'Username can only contain letters, numbers, underscores, and hyphens';
     }
     
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-    }
-    
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -81,8 +56,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     }
 
     try {
-      const { confirmPassword, ...registrationData } = formData;
-      const response = await register(registrationData);
+      const response = await register(formData);
       
       // Registration successful - switch to login form
       onSwitchToLogin();
@@ -95,9 +69,6 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     const timestamp = Date.now().toString().slice(-4);
     setFormData({
       username: `testuser${timestamp}`,
-      email: `test${timestamp}@example.com`,
-      password: 'TestPass123',
-      confirmPassword: 'TestPass123'
     });
   };
 
@@ -175,137 +146,6 @@ const RegisterForm = ({ onSwitchToLogin }) => {
             />
             {validationErrors.username && (
               <p className="mt-1 text-xs text-red-600">{validationErrors.username}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                validationErrors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter your email"
-              disabled={loading}
-            />
-            {validationErrors.email && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.email}</p>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  validationErrors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                disabled={loading}
-              >
-                <svg
-                  className="w-5 h-5 text-gray-400 hover:text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {showPassword ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                    />
-                  )}
-                </svg>
-              </button>
-            </div>
-            {validationErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.password}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500">
-              Must contain at least 8 characters with uppercase, lowercase, and number
-            </p>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  validationErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Confirm your password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                disabled={loading}
-              >
-                <svg
-                  className="w-5 h-5 text-gray-400 hover:text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {showConfirmPassword ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                    />
-                  )}
-                </svg>
-              </button>
-            </div>
-            {validationErrors.confirmPassword && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.confirmPassword}</p>
             )}
           </div>
 

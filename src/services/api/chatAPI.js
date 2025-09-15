@@ -12,7 +12,7 @@ const chatAPI = {
   sendMessage: async (messageData) => {
     try {
       const response = await serverAPI.post('/chat/send', {
-        recipient_id: messageData.recipientId,
+        receiver_username: messageData.receiverUsername,
         content: messageData.content,
         message_type: messageData.type || 'text',
       });
@@ -25,14 +25,14 @@ const chatAPI = {
   /**
    * Get chat history with another user
    */
-  getChatHistory: async (otherUserId, options = {}) => {
+  getChatHistory: async (otherUsername, options = {}) => {
     try {
       const params = new URLSearchParams();
       if (options.limit) params.append('limit', options.limit);
       if (options.offset) params.append('offset', options.offset);
 
       const response = await serverAPI.get(
-        `/chat/history/${otherUserId}?${params.toString()}`
+        `/chat/history/${otherUsername}?${params.toString()}`
       );
       return response.data;
     } catch (error) {
@@ -43,10 +43,18 @@ const chatAPI = {
   /**
    * Mark messages as read
    */
-  markMessagesAsRead: async (messageIds) => {
+  markMessagesAsRead: async (senderUsername) => {
     try {
+      // First get user info to get the user ID
+      const usersResponse = await serverAPI.get('/chat/users');
+      const user = usersResponse.data.data?.users?.find(u => u.username === senderUsername) || usersResponse.data.users?.find(u => u.username === senderUsername);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
       const response = await serverAPI.post('/chat/mark-read', {
-        message_ids: messageIds,
+        sender_id: user.id,
       });
       return response.data;
     } catch (error) {
@@ -69,9 +77,17 @@ const chatAPI = {
   /**
    * Get user online status
    */
-  getUserStatus: async (userId) => {
+  getUserStatus: async (username) => {
     try {
-      const response = await serverAPI.get(`/chat/status/${userId}`);
+      // First get user info to get the user ID
+      const usersResponse = await serverAPI.get('/chat/users');
+      const user = usersResponse.data.data?.users?.find(u => u.username === username) || usersResponse.data.users?.find(u => u.username === username);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const response = await serverAPI.get(`/chat/status/${user.id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -95,15 +111,25 @@ const chatAPI = {
    */
   searchUsers: async (query, options = {}) => {
     try {
-      const params = new URLSearchParams();
-      params.append('search', query);
-      if (options.limit) params.append('limit', options.limit);
-      if (options.offset) params.append('offset', options.offset);
+      // Get all users and filter client-side since server doesn't have dedicated search endpoint
+      const response = await serverAPI.get('/chat/users');
+      const allUsers = response.data.data?.users || response.data.users || [];
 
-      const response = await serverAPI.get(
-        `/admin/users?${params.toString()}`
+      // Filter users based on search query
+      const filteredUsers = allUsers.filter(user =>
+        user.username.toLowerCase().includes(query.toLowerCase())
       );
-      return response.data;
+
+      // Apply limit if specified
+      const limit = options.limit || filteredUsers.length;
+      const limitedUsers = filteredUsers.slice(0, limit);
+
+      return {
+        data: {
+          users: limitedUsers,
+          total_count: limitedUsers.length
+        }
+      };
     } catch (error) {
       throw error.response?.data || error.message;
     }

@@ -1,208 +1,175 @@
-import { serverAPI } from '../apiClient';
-
-/**
- * Authentication API service
- * Direct integration with echo-mcp-server auth endpoints
- */
+// Authentication API for Echo MCP Server
+import { serverAPI } from '../apiClient.js';
 
 const authAPI = {
   /**
    * Register a new user
+   * @param {Object} userData - User registration data
+   * @param {string} userData.username - Username for registration
+   * @returns {Promise<Object>} Registration response
    */
   register: async (userData) => {
     try {
       const response = await serverAPI.post('/auth/register', {
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
+        username: userData.username
       });
       return response.data;
     } catch (error) {
+      console.error('Registration error:', error);
       throw error.response?.data || error.message;
     }
   },
 
   /**
    * Login user
+   * @param {Object} credentials - User login credentials
+   * @param {string} credentials.username - Username for login
+   * @returns {Promise<Object>} Login response with tokens
    */
   login: async (credentials) => {
     try {
       const response = await serverAPI.post('/auth/login', {
-        username: credentials.username,
-        password: credentials.password,
+        username: credentials.username
       });
-      
-      // Store token and user data
-      if (response.data.access_token) {
-        localStorage.setItem('auth_token', response.data.access_token);
-        localStorage.setItem('refresh_token', response.data.refresh_token);
-        localStorage.setItem('user_data', JSON.stringify(response.data.user));
+
+      // Store tokens in localStorage
+      if (response.data.data) {
+        const { access_token, refresh_token, user } = response.data.data;
+        localStorage.setItem('auth_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        localStorage.setItem('user_data', JSON.stringify(user));
       }
-      
+
       return response.data;
     } catch (error) {
+      console.error('Login error:', error);
       throw error.response?.data || error.message;
     }
   },
 
   /**
    * Logout user
+   * @returns {Promise<Object>} Logout response
    */
   logout: async () => {
     try {
-      await serverAPI.post('/auth/logout');
-    } catch (error) {
-      console.warn('Logout API call failed:', error);
-    } finally {
-      // Clear local storage regardless of API response
+      // Clear local storage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user_data');
-    }
-  },
 
-  /**
-   * Refresh access token
-   */
-  refreshToken: async () => {
-    try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await serverAPI.post('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
-
-      // Update stored tokens
-      localStorage.setItem('auth_token', response.data.access_token);
-      if (response.data.refresh_token) {
-        localStorage.setItem('refresh_token', response.data.refresh_token);
-      }
-
-      return response.data;
+      return { success: true, message: 'Logged out successfully' };
     } catch (error) {
-      // If refresh fails, clear all tokens
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user_data');
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Get current user profile
-   */
-  getCurrentUser: async () => {
-    try {
-      const response = await serverAPI.get('/auth/me');
-      
-      // Update stored user data
-      localStorage.setItem('user_data', JSON.stringify(response.data));
-      
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Update user profile
-   */
-  updateProfile: async (userData) => {
-    try {
-      const response = await serverAPI.put('/auth/me', userData);
-      
-      // Update stored user data
-      localStorage.setItem('user_data', JSON.stringify(response.data));
-      
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Request password reset
-   */
-  requestPasswordReset: async (email) => {
-    try {
-      const response = await serverAPI.post('/auth/request-password-reset', {
-        email: email,
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Reset password
-   */
-  resetPassword: async (token, newPassword) => {
-    try {
-      const response = await serverAPI.post('/auth/reset-password', {
-        token: token,
-        new_password: newPassword,
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Verify email
-   */
-  verifyEmail: async (token) => {
-    try {
-      const response = await serverAPI.get(`/auth/verify-email?token=${token}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  /**
-   * Resend email verification
-   */
-  resendVerification: async () => {
-    try {
-      const response = await serverAPI.post('/auth/resend-verification');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
+      console.error('Logout error:', error);
+      throw error;
     }
   },
 
   /**
    * Check if user is authenticated
+   * @returns {boolean} Authentication status
    */
   isAuthenticated: () => {
     const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('user_data');
-    return !!(token && userData);
+    return !!token;
+  },
+
+  /**
+   * Get stored token
+   * @returns {string|null} Stored auth token
+   */
+  getToken: () => {
+    return localStorage.getItem('auth_token');
   },
 
   /**
    * Get stored user data
+   * @returns {Object|null} Stored user data
    */
   getStoredUser: () => {
+    const userData = localStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  },
+
+  /**
+   * Refresh access token
+   * @param {string} refreshToken - Refresh token
+   * @returns {Promise<Object>} New token response
+   */
+  refreshToken: async (refreshToken) => {
     try {
-      const userData = localStorage.getItem('user_data');
-      return userData ? JSON.parse(userData) : null;
+      const response = await serverAPI.post('/auth/refresh', {
+        refresh_token: refreshToken
+      });
+
+      // Update stored tokens
+      if (response.data.data) {
+        const { access_token } = response.data.data;
+        localStorage.setItem('auth_token', access_token);
+      }
+
+      return response.data;
     } catch (error) {
-      console.error('Error parsing stored user data:', error);
-      return null;
+      console.error('Token refresh error:', error);
+      // Clear tokens on refresh failure
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_data');
+      throw error.response?.data || error.message;
     }
   },
 
   /**
-   * Get stored auth token
+   * Update user profile - No-op for demo
    */
-  getToken: () => {
-    return localStorage.getItem('auth_token');
+  updateProfile: async () => {
+    return { success: true };
+  },
+
+  /**
+   * Refresh token - No-op for demo
+   */
+  refreshToken: async () => {
+    return { success: true };
+  },
+
+  /**
+   * Get current user profile - Returns demo user
+   */
+  getCurrentUser: async () => {
+    return {
+      id: 1,
+      username: "demo",
+      is_active: true
+    };
+  },
+
+  /**
+   * Request password reset - No-op for demo
+   */
+  requestPasswordReset: async () => {
+    return { success: true };
+  },
+
+  /**
+   * Reset password - No-op for demo
+   */
+  resetPassword: async () => {
+    return { success: true };
+  },
+
+  /**
+   * Verify email - No-op for demo
+   */
+  verifyEmail: async () => {
+    return { success: true };
+  },
+
+  /**
+   * Resend email verification - No-op for demo
+   */
+  resendVerification: async () => {
+    return { success: true };
   },
 };
 

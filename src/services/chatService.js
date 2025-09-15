@@ -123,16 +123,16 @@ class ChatService {
 
   /**
    * Send message via HTTP API and WebSocket
-   * @param {number} receiverId - ID of the message receiver
+   * @param {string} receiverUsername - Username of the message receiver
    * @param {string} content - Message content
    */
-  async sendMessage(receiverId, content) {
+  async sendMessage(receiverUsername, content) {
     const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('No access token found');
     }
 
-    console.log('ChatService.sendMessage called:', { receiverId, content, hasToken: !!token });
+    console.log('ChatService.sendMessage called:', { receiverUsername, content, hasToken: !!token });
 
     try {
       // First, send via HTTP API
@@ -143,7 +143,7 @@ class ChatService {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          receiver_id: receiverId,
+          receiver_username: receiverUsername,
           content: content
         })
       });
@@ -165,7 +165,7 @@ class ChatService {
         const wsMessage = {
           type: 'send_message',
           data: {
-            receiver_id: receiverId,
+            receiver_username: receiverUsername,
             content: content
           }
         };
@@ -181,10 +181,10 @@ class ChatService {
 
   /**
    * Send typing indicator
-   * @param {number} targetUserId - ID of the user being typed to
+   * @param {string} targetUsername - Username of the user being typed to
    * @param {boolean} isTyping - Whether currently typing
    */
-  sendTypingIndicator(targetUserId, isTyping) {
+  sendTypingIndicator(targetUsername, isTyping) {
     if (!this.isConnected || !this.websocket) {
       return;
     }
@@ -192,7 +192,7 @@ class ChatService {
     const message = {
       type: 'typing_indicator',
       data: {
-        target_user_id: targetUserId,
+        target_username: targetUsername,
         is_typing: isTyping
       }
     };
@@ -307,19 +307,19 @@ class ChatService {
 
   /**
    * Get chat history with a user
-   * @param {number} otherUserId - ID of the other user
+   * @param {string} otherUsername - Username of the other user
    * @param {number} limit - Number of messages to retrieve
    * @param {number} offset - Number of messages to skip
    * @returns {Promise} - Chat history response
    */
-  async getChatHistory(otherUserId, limit = 50, offset = 0) {
+  async getChatHistory(otherUsername, limit = 50, offset = 0) {
     const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('No access token found');
     }
 
     const response = await fetch(
-      `${this.baseUrl}/history/${otherUserId}?limit=${limit}&offset=${offset}`,
+      `${this.baseUrl}/history/${otherUsername}?limit=${limit}&offset=${offset}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -365,13 +365,32 @@ class ChatService {
 
   /**
    * Mark messages from a user as read (REST API)
-   * @param {number} senderId - ID of the user whose messages to mark as read
+   * @param {string} senderUsername - Username of the user whose messages to mark as read
    * @returns {Promise} - Mark read response
    */
-  async markMessagesAsRead(senderId) {
+  async markMessagesAsRead(senderUsername) {
     const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('No access token found');
+    }
+
+    // First get user info to get the user ID
+    const usersResponse = await fetch(`${this.baseUrl}/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!usersResponse.ok) {
+      throw new Error(`Failed to get users: ${usersResponse.status}`);
+    }
+
+    const usersData = await usersResponse.json();
+    const user = usersData.data?.users?.find(u => u.username === senderUsername) || usersData.users?.find(u => u.username === senderUsername);
+
+    if (!user) {
+      throw new Error('User not found');
     }
 
     const response = await fetch(`${this.baseUrl}/mark-read`, {
@@ -380,7 +399,7 @@ class ChatService {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ sender_id: senderId })
+      body: JSON.stringify({ sender_id: user.id })
     });
 
     if (!response.ok) {
@@ -424,16 +443,35 @@ class ChatService {
 
   /**
    * Get user online status
-   * @param {number} userId - ID of the user to check
+   * @param {string} username - Username of the user to check
    * @returns {Promise} - User status response
    */
-  async getUserStatus(userId) {
+  async getUserStatus(username) {
     const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('No access token found');
     }
 
-    const response = await fetch(`${this.baseUrl}/status/${userId}`, {
+    // First get user info to get the user ID
+    const usersResponse = await fetch(`${this.baseUrl}/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!usersResponse.ok) {
+      throw new Error(`Failed to get users: ${usersResponse.status}`);
+    }
+
+    const usersData = await usersResponse.json();
+    const user = usersData.data?.users?.find(u => u.username === username) || usersData.users?.find(u => u.username === username);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const response = await fetch(`${this.baseUrl}/status/${user.id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

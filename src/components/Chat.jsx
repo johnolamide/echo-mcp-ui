@@ -282,22 +282,22 @@ const Chat = () => {
   };
 
   // Load chat history for selected conversation
-  const loadChatHistory = async (otherUserId) => {
+  const loadChatHistory = async (otherUsername) => {
     try {
       setLoading(true);
-      const data = await chatService.getChatHistory(otherUserId);
+      const data = await chatService.getChatHistory(otherUsername);
       setMessages(data.messages.reverse() || []); // Reverse to show oldest first
       
       // Mark messages as read
       try {
-        await chatService.markMessagesAsRead(otherUserId);
+        await chatService.markMessagesAsRead(otherUsername);
       } catch (error) {
         console.log('Mark as read API call failed:', error);
       }
       
       // Update conversation unread count
       setConversations(prev => prev.map(conv => 
-        conv.other_user_id === otherUserId 
+        conv.other_username === otherUsername 
           ? { ...conv, unread_count: 0 }
           : conv
       ));
@@ -317,7 +317,7 @@ const Chat = () => {
 
     setIsPolling(true);
     try {
-      const data = await chatService.getChatHistory(selectedConversation.other_user_id);
+      const data = await chatService.getChatHistory(selectedConversation.other_username);
       const newMessages = data.messages || [];
 
       // Find messages newer than our last known message
@@ -345,12 +345,12 @@ const Chat = () => {
 
         // Mark new messages as read if they're from the other user
         const unreadMessages = newerMessages.filter(msg =>
-          msg.sender_id === selectedConversation.other_user_id
+          msg.sender_username === selectedConversation.other_username
         );
 
         if (unreadMessages.length > 0) {
           try {
-            await chatService.markMessagesAsRead(selectedConversation.other_user_id);
+            await chatService.markMessagesAsRead(selectedConversation.other_username);
           } catch (error) {
             console.log('Mark as read failed:', error);
           }
@@ -463,7 +463,7 @@ const Chat = () => {
 
     setIsPolling(true);
     try {
-      const data = await chatService.getChatHistory(selectedConversation.other_user_id);
+      const data = await chatService.getChatHistory(selectedConversation.other_username);
       const allMessages = data.messages || [];
 
       // Replace all messages with fresh data
@@ -480,7 +480,7 @@ const Chat = () => {
 
       // Mark messages as read
       try {
-        await chatService.markMessagesAsRead(selectedConversation.other_user_id);
+        await chatService.markMessagesAsRead(selectedConversation.other_username);
       } catch (error) {
         console.log('Mark as read failed:', error);
       }
@@ -555,7 +555,8 @@ const Chat = () => {
         timestamp: new Date().toISOString(),
         is_temp: true,
         sending: true,
-        sender_username: user?.username || 'You'
+        sender_username: user?.username || 'You',
+        receiver_username: selectedConversation.other_username
       };
 
       setMessages(prev => [...prev, tempMessage]);
@@ -565,7 +566,7 @@ const Chat = () => {
       setTimeout(scrollToBottom, 50);
 
       // Send via API
-      const response = await chatService.sendMessage(selectedConversation.other_user_id, messageContent);
+      const response = await chatService.sendMessage(selectedConversation.other_username, messageContent);
       console.log('Message sent successfully:', response);
 
       // Update the temporary message with real data and mark as sent
@@ -610,7 +611,7 @@ const Chat = () => {
     
     if (selectedConversation && isConnected) {
       // Send typing indicator
-      chatService.sendTypingIndicator(selectedConversation.other_user_id, true);
+      chatService.sendTypingIndicator(selectedConversation.other_username, true);
       
       // Clear previous timeout
       if (typingTimeoutRef.current) {
@@ -619,7 +620,7 @@ const Chat = () => {
       
       // Set timeout to stop typing indicator
       typingTimeoutRef.current = setTimeout(() => {
-        chatService.sendTypingIndicator(selectedConversation.other_user_id, false);
+        chatService.sendTypingIndicator(selectedConversation.other_username, false);
       }, 2000);
     }
   };
@@ -732,7 +733,7 @@ const Chat = () => {
                     }`}
                     onClick={() => {
                       setSelectedConversation(conv);
-                      loadChatHistory(conv.other_user_id);
+                      loadChatHistory(conv.other_username);
                     }}
                   >
                     <div className="flex items-start gap-3">
@@ -787,7 +788,7 @@ const Chat = () => {
                   <div
                     key={user.id}
                     className={`p-3 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
-                      selectedConversation?.other_user_id === user.id 
+                      selectedConversation?.other_username === user.username 
                         ? 'bg-muted' 
                         : ''
                     }`}
@@ -805,7 +806,7 @@ const Chat = () => {
                         total_messages: 0
                       };
                       setSelectedConversation(conversationData);
-                      loadChatHistory(user.id);
+                      loadChatHistory(user.username);
                     }}
                   >
                     <div className="flex items-center gap-3">

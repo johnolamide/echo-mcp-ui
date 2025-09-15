@@ -80,7 +80,7 @@ const Dashboard = () => {
     { label: 'View Orders', description: 'Manage restaurant and store orders', action: 'orders', icon: Package },
     { label: 'Open Chat', description: 'Start real-time conversations', action: 'chat', icon: MessageSquare },
     { label: 'Agent Dashboard', description: 'Monitor and manage your AI agent', action: 'agent', icon: Bot },
-    ...(user?.is_admin ? [{ label: 'User Stats', description: 'View platform statistics', action: 'users', icon: Users, isAdmin: true }] : []),
+    { label: 'User Stats', description: 'View platform statistics', action: 'users', icon: Users, isAdmin: true },
   ];
 
   const renderDashboardView = () => (
@@ -103,10 +103,10 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-        {stats.map((stat, index) => {
+        {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={index}>
+            <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {stat.title}
@@ -204,7 +204,7 @@ const Dashboard = () => {
             </Card>
 
             {/* User Management - Admin Only */}
-            {user?.is_admin && (
+            
               <Card
                 className="cursor-pointer transition-all hover:shadow-md border-orange-200 bg-gradient-to-br from-orange-50 to-red-50"
                 onClick={() => handleWidgetClick('users')}
@@ -233,7 +233,6 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            )}
           </div>
         </div>
 
@@ -247,11 +246,11 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {quickActions.map((action, index) => {
+              {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (
                   <Button
-                    key={index}
+                    key={action.action}
                     variant="ghost"
                     className={`w-full justify-start h-auto p-3 ${
                       action.isAdmin ? 'border border-orange-200 bg-orange-50 hover:bg-orange-100' : ''
@@ -285,183 +284,6 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white text-lg">AI Assistant</CardTitle>
               <CardDescription className="text-blue-100 text-sm">
-                Get intelligent help with platform operations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-blue-100 mb-4">
-                Use the floating AI button to get contextual assistance with any task.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-blue-200">Always available</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Feature Cards */}
-        <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Chat Management */}
-            <Card
-              className="cursor-pointer transition-all hover:shadow-md"
-              onClick={() => handleWidgetClick('chat')}
-            >
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <MessageSquare className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Real-time Chat</CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Connect with other users, manage conversations, and track online status.
-                </CardDescription>
-                <div className="flex items-center mt-4 text-sm text-primary">
-                  Open Chat <ChevronRight className="h-4 w-4 ml-1" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Service Management */}
-            <Card
-              className="cursor-pointer transition-all hover:shadow-md"
-              onClick={() => handleWidgetClick('service')}
-            >
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Package className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Service Marketplace</CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Browse and integrate powerful services to enhance your AI agent's capabilities.
-                </CardDescription>
-                <div className="flex items-center mt-4 text-sm text-primary">
-                  Explore Services <ChevronRight className="h-4 w-4 ml-1" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Agent Dashboard */}
-            <Card
-              className="cursor-pointer transition-all hover:shadow-md"
-              onClick={() => handleWidgetClick('agent')}
-            >
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Bot className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Agent Dashboard</CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Monitor your AI agent's performance, manage services, and view real-time metrics.
-                </CardDescription>
-                <div className="flex items-center mt-4 text-sm text-primary">
-                  View Dashboard <ChevronRight className="h-4 w-4 ml-1" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* User Management - Admin Only */}
-            {user?.is_admin && (
-              <Card
-                className="cursor-pointer transition-all hover:shadow-md border-orange-200 bg-gradient-to-br from-orange-50 to-red-50"
-                onClick={() => handleWidgetClick('users')}
-              >
-                <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Users className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg flex items-center">
-                        Admin Panel
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full">
-                          Admin
-                        </span>
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Manage services, view statistics, and monitor platform performance.
-                  </CardDescription>
-                  <div className="flex items-center mt-4 text-sm text-primary">
-                    Admin Panel <ChevronRight className="h-4 w-4 ml-1" />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions Sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Frequently used operations and shortcuts
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className={`w-full justify-start h-auto p-3 ${
-                      action.isAdmin ? 'border border-orange-200 bg-orange-50 hover:bg-orange-100' : ''
-                    }`}
-                    onClick={() => handleQuickAction(action.action)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <div className="text-left">
-                        <div className="font-medium text-sm flex items-center">
-                          {action.label}
-                          {action.isAdmin && (
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full">
-                              Admin
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {action.description}
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                );
-              })}
-            </CardContent>
-          </Card>
-
-          {/* AI Assistant Card */}
-          <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-            <CardHeader>
-              <CardTitle className="text-white">AI Assistant</CardTitle>
-              <CardDescription className="text-blue-100">
                 Get intelligent help with platform operations
               </CardDescription>
             </CardHeader>
@@ -544,11 +366,10 @@ const Dashboard = () => {
           {/* Logo and Title */}
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-bold">Echo MCP</h1>
-            {user?.is_admin && (
+            
               <span className="hidden sm:inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
                 Admin
               </span>
-            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -589,7 +410,7 @@ const Dashboard = () => {
               <Bot className="h-4 w-4" />
               <span>Agent</span>
             </Button>
-            {user?.is_admin && (
+            
               <Button
                 variant={activeView === 'admin' ? 'default' : 'ghost'}
                 size="sm"
@@ -599,7 +420,6 @@ const Dashboard = () => {
                 <Shield className="h-4 w-4" />
                 <span>Admin</span>
               </Button>
-            )}
           </nav>
 
           {/* User Actions */}
@@ -689,7 +509,7 @@ const Dashboard = () => {
                   <Bot className="h-4 w-4 mr-2" />
                   Agent
                 </Button>
-                {user?.is_admin && (
+                
                   <Button
                     variant={activeView === 'admin' ? 'default' : 'ghost'}
                     className="w-full justify-start"
@@ -701,7 +521,6 @@ const Dashboard = () => {
                     <Shield className="h-4 w-4 mr-2" />
                     Admin
                   </Button>
-                )}
                 <div className="border-t pt-2 mt-4">
                   <Button
                     variant="ghost"

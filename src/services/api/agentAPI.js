@@ -1,17 +1,17 @@
-import { agentAPI } from '../apiClient';
+import { agentAPI as agentAPIClient } from '../apiClient';
 
 /**
  * AI Agent API service
  * Integration with echo-mcp-client for AI assistant functionality
  */
 
-const agentAPI_service = {
+const agentAPI = {
   /**
    * Send prompt to AI agent
    */
   sendPrompt: async (prompt, options = {}) => {
     try {
-      const response = await agentAPI.post('/prompt', {
+      const response = await agentAPIClient.post('/prompt', {
         prompt: prompt,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 4096,
@@ -39,7 +39,7 @@ const agentAPI_service = {
    */
   getAvailableTools: async () => {
     try {
-      const response = await agentAPI.get('/tools');
+      const response = await agentAPIClient.get('/tools');
       return response.data;
     } catch (error) {
       throw {
@@ -54,7 +54,7 @@ const agentAPI_service = {
    */
   checkHealth: async () => {
     try {
-      const response = await agentAPI.get('/health');
+      const response = await agentAPIClient.get('/health');
       return response.data;
     } catch (error) {
       throw {
@@ -70,7 +70,7 @@ const agentAPI_service = {
   sendPromptStream: async (prompt, options = {}) => {
     try {
       // Note: This would need to be implemented on the backend
-      const response = await agentAPI.post('/prompt/stream', {
+      const response = await agentAPIClient.post('/prompt/stream', {
         prompt: prompt,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 4096,
@@ -88,36 +88,6 @@ const agentAPI_service = {
    * Format prompt for specific use cases
    */
   formatPrompt: {
-    /**
-     * Format prompt for restaurant operations
-     */
-    restaurant: (operation, data) => {
-      const prompts = {
-        acceptOrder: `Accept order ${data.orderId} for provider ${data.providerId}`,
-        rejectOrder: `Reject order ${data.orderId} for provider ${data.providerId} with reason: ${data.reason}`,
-        markReady: `Mark order ${data.orderId} as ready for provider ${data.providerId}`,
-        startAccepting: `Start accepting orders for restaurant provider ${data.providerId}`,
-        pauseOrders: `Pause orders for restaurant provider ${data.providerId}`,
-        getMenu: `Get the menu for restaurant provider ${data.providerId}`,
-      };
-      return prompts[operation] || `Perform ${operation} operation for restaurant`;
-    },
-
-    /**
-     * Format prompt for store operations
-     */
-    store: (operation, data) => {
-      const prompts = {
-        acceptOrder: `Accept store order ${data.orderId} for provider ${data.providerId}`,
-        rejectOrder: `Reject store order ${data.orderId} for provider ${data.providerId} with reason: ${data.reason}`,
-        markReady: `Mark store order ${data.orderId} as ready for provider ${data.providerId}`,
-        startAccepting: `Start accepting orders for store provider ${data.providerId}`,
-        pauseOrders: `Pause orders for store provider ${data.providerId}`,
-        getProducts: `Get the products for store provider ${data.providerId}`,
-      };
-      return prompts[operation] || `Perform ${operation} operation for store`;
-    },
-
     /**
      * Format prompt for user operations
      */
@@ -140,4 +110,4 @@ const agentAPI_service = {
   },
 };
 
-export default agentAPI_service;
+export default agentAPI;
