@@ -27,7 +27,8 @@ const ServiceMarketplace = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setServices(data.data || []);
+        // API returns: { status, message, data: { services: [], total, active_count } }
+        setServices(data.data?.services || []);
       }
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -47,7 +48,8 @@ const ServiceMarketplace = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setUserServices(data.data || []);
+        // API returns: { status, message, data: { services: [] } }
+        setUserServices(data.data?.services || []);
       }
     } catch (error) {
       console.error('Error fetching user services:', error);
@@ -101,7 +103,7 @@ const ServiceMarketplace = () => {
   };
 
   const isServiceAdded = (serviceId) => {
-    return userServices.some(us => us.service_id === serviceId && us.is_active);
+    return (userServices || []).some(us => us.service_id === serviceId && us.is_active);
   };
 
   if (loading) {
@@ -132,7 +134,7 @@ const ServiceMarketplace = () => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
+          {(services || []).map((service) => (
             <div
               key={service.id}
               className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
@@ -189,13 +191,13 @@ const ServiceMarketplace = () => {
         </div>
       )}
 
-      {userServices.length > 0 && (
+      {(userServices || []).length > 0 && (
         <div className="mt-12">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Your Agent's Services</h3>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="grid gap-2">
-              {userServices.filter(us => us.is_active).map((userService) => {
-                const service = services.find(s => s.id === userService.service_id);
+              {(userServices || []).filter(us => us.is_active).map((userService) => {
+                const service = (services || []).find(s => s.id === userService.service_id);
                 return service ? (
                   <div key={userService.id} className="flex items-center justify-between bg-white p-3 rounded-md">
                     <div>
