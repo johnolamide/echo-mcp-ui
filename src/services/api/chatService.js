@@ -1,31 +1,62 @@
-import apiClient from './apiClient';
+import { agentWebSocketService } from '../agentWebSocketService';
 
 export const chatService = {
   /**
-   * Send a message to the chat API
+   * Send a message to the chat API via WebSocket
    * @param {string} message - User's input message
    * @param {string} [conversationId] - Optional conversation ID for continuing a conversation
    * @returns {Promise<Object>} - Response containing AI's reply and conversation metadata
    */
   sendMessage: async (message, conversationId = null) => {
     try {
-      // Call the /prompt endpoint according to the echo-mcp-client API
-      // Based on the router.py PromptRequest model
-      const response = await apiClient.post('/prompt', {
-        prompt: message,
-        temperature: 0.7,
-        max_tokens: 4096,
-        top_p: 0.9
+      // Ensure WebSocket connection is established
+      if (!agentWebSocketService.isConnected) {
+        // Try to connect if not connected (assuming user ID is available)
+        const userId = localStorage.getItem('user_id') || '1'; // Default to user 1 for demo
+        await agentWebSocketService.connectAgentWebSocket(userId);
+
+        // Wait a bit for connection to establish
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // Send message via WebSocket
+      agentWebSocketService.sendCommand(message, 'command');
+
+      // Log the message for debugging
+      console.log('Echo MCP Client WebSocket Message:', message);
+
+      // Return a promise that resolves when we get a response
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Agent response timeout'));
+        }, 30000); // 30 second timeout
+
+        // Listen for response
+        const messageHandler = (response) => {
+          if (response.type === 'response' || response.type === 'error') {
+            clearTimeout(timeout);
+            agentWebSocketService.messageHandlers =
+              agentWebSocketService.messageHandlers.filter(h => h !== messageHandler);
+
+            if (response.type === 'error') {
+              reject(new Error(response.message));
+            } else {
+              // Format response to match expected structure
+              resolve({
+                response: response.message,
+                success: true,
+                message: response.message,
+                conversation_id: conversationId,
+                timestamp: response.timestamp || Date.now()
+              });
+            }
+          }
+        };
+
+        agentWebSocketService.onMessage(messageHandler);
       });
-      
-      // Log the response data for debugging
-      console.log('Echo MCP Client API Response:', response.data);
-      
-      // The response should follow the PromptResponse model
-      // with fields: response, success, message, tools_used
-      return response.data;
     } catch (error) {
-      console.error('Error sending message to echo-mcp-client API:', error);
+      console.error('Error sending message to echo-mcp-client WebSocket:', error);
       throw error;
     }
   },
