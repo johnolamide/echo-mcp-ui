@@ -39,7 +39,7 @@ class AgentWebSocketService {
     return new Promise((resolve, reject) => {
       try {
         const agentApiUrl = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:8002';
-        const wsUrl = `${agentApiUrl}/ws/agent/${userId}`.replace('http', 'ws');
+        const wsUrl = agentApiUrl.replace(/^http/, 'ws').replace(/^https/, 'wss') + `/ws/agent/${userId}`;
         console.log('Connecting to Agent WebSocket:', wsUrl);
         
         this.websocket = new WebSocket(wsUrl);
