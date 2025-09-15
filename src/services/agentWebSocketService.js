@@ -55,7 +55,7 @@ class AgentWebSocketService {
           clearTimeout(connectionTimeout);
           this.isConnected = true;
           this.reconnectAttempts = 0;
-          console.log('Agent WebSocket connected successfully');
+          console.log('Agent WebSocket connected successfully to:', wsUrl);
           this.connectionHandlers.forEach(handler => handler({ type: 'connected' }));
           resolve();
         };
@@ -91,9 +91,15 @@ class AgentWebSocketService {
 
         this.websocket.onerror = (error) => {
           console.error('Agent WebSocket error:', error);
+          console.error('WebSocket URL that failed:', wsUrl);
+          console.error('Agent API URL used:', agentApiUrl);
+          console.error('This might be due to SSL certificate mismatch. Certificate is for *.qkiu.tech but domain is agent.echo-mcp.qkiu.tech');
           this.connectionHandlers.forEach(handler => handler({ 
             type: 'error', 
-            error: error 
+            error: error,
+            url: wsUrl,
+            agentApiUrl: agentApiUrl,
+            sslHint: 'SSL certificate mismatch detected'
           }));
         };
 
@@ -160,14 +166,20 @@ class AgentWebSocketService {
   }
 
   /**
-   * Get connection status
+   * Get connection status with detailed information
    */
   getStatus() {
+    const agentApiUrl = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:8002';
+    const wsUrl = this.userId ? agentApiUrl.replace(/^http/, 'ws').replace(/^https/, 'wss') + `/ws/agent/${this.userId}` : null;
+    
     return {
       isConnected: this.isConnected,
       readyState: this.websocket ? this.websocket.readyState : WebSocket.CLOSED,
       userId: this.userId,
-      reconnectAttempts: this.reconnectAttempts
+      reconnectAttempts: this.reconnectAttempts,
+      agentApiUrl: agentApiUrl,
+      websocketUrl: wsUrl,
+      environment: import.meta.env.MODE
     };
   }
 }
